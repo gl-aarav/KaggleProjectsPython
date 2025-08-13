@@ -16,7 +16,7 @@ from keras.optimizers import Adam
 #%%
 # Read the labels.csv file and checking shape and records
 labels_all = pd.read_csv('labels.csv')
-labels_all.shape
+print(labels_all.shape)
 labels_all.head()
 #%% md
 # Loading the labels data into dataframe and viewing it . Here we analyze that labels contain 10222 rows and 2 columns
@@ -49,7 +49,45 @@ for i in tqdm(range(len(labels))):
 print('\nTrain Images shape: ',X_data.shape,' size: {:,}'. format(X_data.size))
 print('One-hot encoded output shape: ',Y_data.shape,' size: {:,}'.format(Y_data.size))
 #%%
+# Building the Model
+model = Sequential()
 
+model.add(Conv2D(filters=64, kernel_size = (5,5), activation='relu', input_shape=(224,224,3)))
+model.add(MaxPool2D(pool_size=(2,2)))
+
+model.add(Conv2D(filters=32, kernel_size = (3,3), activation='relu', kernel_regularizer='l2'))
+model.add(MaxPool2D(pool_size=(2,2)))
+
+model.add(Conv2D(filters=16, kernel_size = (7,7), activation='relu', kernel_regularizer='l2'))
+model.add(MaxPool2D(pool_size=(2,2)))
+
+model.add(Conv2D(filters=8, kernel_size = (5,5), activation='relu', kernel_regularizer='l2'))
+model.add(MaxPool2D(pool_size=(2,2)))
+
+model.add(Flatten())
+model.add(Dense(128, activation='relu', kernel_regularizer='l2'))
+model.add(Dense(64, activation='relu', kernel_regularizer='l2'))
+model.add(Dense(len(CLASS_NAMES), activation='softmax'))
+
+model.compile(loss='categorical_crossentropy', optimizer=Adam(0.0001),  metrics=['accuracy'])
+
+model.summary()
 #%%
-
+# Splitting the data into train and testing set
+X_train_and_val, X_test, Y_train_and_val, Y_test = train_test_split(X_data, Y_data, test_size=0.1)
+# Splitting data into train and validation set
+X_train, X_val, Y_train, Y_val = train_test_split(X_train_and_val, Y_train_and_val, test_size=0.2)
+#%%
+# Training the model
+history = model.fit(X_train, Y_train, batch_size=128, epochs=100, validation_data=(X_val, Y_val))
+#%%
+# Plot the training history
+plt.figure(figsize=(12,5))
+plt.plot(history.history['accuracy'], color = 'red')
+plt.plot(history.history['val_accuracy'], color = 'blue')
+plt.title('Model Accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epochs')
+plt.legend(['Train', 'Validation'])
+plt.show()
 #%%
